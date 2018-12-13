@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-pg/pg/internal"
+	"github.com/gogo/protobuf/types"
 )
 
 const (
@@ -18,6 +19,21 @@ const (
 func ParseTime(b []byte) (time.Time, error) {
 	s := internal.BytesToString(b)
 	return ParseTimeString(s)
+}
+
+func AppendGrpcTime(b []byte, ts types.Timestamp, quote int) []byte {
+	if quote == 1 {
+		b = append(b, '\'')
+	}
+	tm, err := types.TimestampFromProto(&ts)
+	if err != nil {
+		return nil
+	}
+	b = tm.UTC().AppendFormat(b, timestamptzFormat)
+	if quote == 1 {
+		b = append(b, '\'')
+	}
+	return b
 }
 
 func ParseTimeString(s string) (time.Time, error) {
